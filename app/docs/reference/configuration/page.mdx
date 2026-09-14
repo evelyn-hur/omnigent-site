@@ -68,6 +68,31 @@ The setting applies to new titles after the local server restarts. An empty
 value removes the additional guidance. A non-string value or a string longer
 than 4,000 characters is ignored and the default title prompt is used.
 
+## Image attachment uploads
+
+| Setting | Value                    |
+| ------- | ------------------------ |
+| Key     | `image_compression_concurrency` |
+| Scope   | Deployed server          |
+| Type    | Positive integer         |
+| Default | `2`                      |
+
+Compressible raster image uploads (PNG, JPEG, WebP, GIF) accept files up to
+50 MB; an oversized one is downscaled and re-encoded under the model provider's
+per-image limit before it is stored. This decode/re-encode step holds the image
+in memory, so the server admits only a bounded number of image uploads to that
+step at once — the rest wait (their bytes already spooled to disk) rather than
+buffering and decoding all at once.
+
+`image_compression_concurrency` sets that bound. Peak upload memory scales with
+this value times the per-upload cost, so the default is sized for
+memory-constrained deployments (around 1 GiB). Raise it on instances with more
+memory headroom:
+
+```yaml
+image_compression_concurrency: 4
+```
+
 ## Managed sandboxes
 
 - [Kubernetes sandbox configuration](/docs/reference/configuration/kubernetes)

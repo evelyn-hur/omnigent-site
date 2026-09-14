@@ -369,6 +369,21 @@ Paste images, screenshots, diagrams, and mockups directly into the conversation.
 Omnigent sees them alongside your text. Useful for frontend work where describing a layout
 issue in words is slower than screenshotting it.
 
+You can also attach PDFs and text or code files. Per-attachment size limits:
+
+| Attachment              | Limit |
+| ----------------------- | ----- |
+| Images (PNG, JPEG, WebP, GIF) | 50 MB |
+| Other images (SVG, …)   | 5 MB  |
+| PDFs                    | 20 MB |
+| Text and code files     | 10 MB |
+
+Large PNG, JPEG, WebP, and GIF uploads are downscaled and re-encoded server-side
+to fit the model provider's per-image limit before they're stored, so full-size
+screenshots and retina captures no longer need to be shrunk by hand. Image types
+that can't be re-encoded (such as SVG) keep the smaller 5 MB cap. An image that
+still can't be brought under the model limit is rejected.
+
 ## Message queue and steering
 
 Type a follow-up while the agent is still working and it's held in a client-side
