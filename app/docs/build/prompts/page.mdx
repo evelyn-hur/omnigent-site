@@ -47,6 +47,24 @@ Skills are reusable instruction bundles that your agent can load at runtime via 
 markdown file with structured instructions. Think of it as a recipe the agent
 follows for a specific task.
 
+### Invoking skills in the web UI
+
+In the web UI composer, start typing `/` to open the command-and-skill menu:
+built-in commands (`/help`, `/effort`, `/model`) come first, followed by one
+entry per session skill. Select a skill (Tab or click) to fill its name plus a
+trailing space, then type any extra context before you send.
+
+Codex-native (`codex-native`) sessions invoke skills with a `$` prefix instead
+of `/`. In those sessions:
+
+- The menu opens with either `$` or `/`, and skills are listed and sent
+  `$`-prefixed (for example, `$code-review`).
+- Built-in commands stay slash-prefixed even when you open the menu with `$`
+  (typing `$eff` still completes to `/effort`).
+
+Every other harness (for example `claude-native` and `claude-sdk`) keeps skills
+slash-prefixed (`/code-review`).
+
 ### How skills are discovered
 
 Omnigent discovers skills from two sources:
