@@ -168,6 +168,41 @@ stored model is still a valid choice for that harness; a retired or unknown id
 falls back to your remembered pick. An explicit model you pick in the composer
 always wins for that session.
 
+### Switch models mid-session
+
+In a running session, change the model from the composer's gear menu (the
+**Models** list) or by typing `/model <name>`. Typing `/model` on its own shows
+the model the session is currently on and the command's usage. Whichever way you
+pick, the choice is saved as the session's model override and survives a page
+reload.
+
+Whether you can also **reset** to the agent's default model depends on the
+harness:
+
+- **Sessions that can reset** — SDK harnesses (for example `claude-sdk`),
+  `opencode`, ACP agents, and any session running under a saved sandbox
+  inference policy. Here `/model default` (or its aliases `off` and `reset`,
+  case-insensitive) clears the override, the slash menu and `/help` show the
+  command as `/model <name> | default`, and the **Models** list offers a
+  **Default** row when the host's catalog doesn't already mark a default model.
+- **Sessions that can't reset** — native CLI wrappers such as Claude Code,
+  Codex, pi, Cursor, Kiro, and Devin, whose live model can only be replaced,
+  not cleared. The **Models** list shows only explicit models (no **Default**
+  row), the slash menu shows plain `/model <name>`, and `/model default`
+  is refused with **This session does not support resetting the model. Choose a
+  model with /model &lt;name&gt;.** Picking the catalog's default-marked model
+  pins that model's ID explicitly, so switching to another model and back
+  leaves the session on a named model rather than an unset override. The
+  checked row reflects the model the session actually reports; a catalog entry
+  being marked as the default is not, by itself, shown as selected.
+
+When the host reports no usable models for the session, the **Models** list
+says **No usable models are available for this session.** instead of offering a
+reset, and the session's current model (if known) is listed but can't be
+selected. Choices appear as soon as the catalog becomes available. Under a
+saved inference policy, a catalog error is shown in the same place and the
+listed models are disabled until it clears.
+
 ### Set what the agent can do without asking
 
 Native coding-agent sessions choose their permission or approval mode from the

@@ -33,6 +33,12 @@ omni run agent.yaml --model claude-sonnet-4-6
 Use the `/model` command inside any running session to switch models on the fly.
 The agent keeps its conversation history and tool state – only the underlying model changes.
 
+Resetting back to the agent's default with `/model default` is only available on
+harnesses that can clear their live model; native CLI wrappers such as Claude
+Code and Codex accept explicit model names only. See
+[Switch models mid-session](/docs/interact/web-ui#switch-models-mid-session) in
+the Web UI docs for the per-harness behavior.
+
 ## Reasoning effort
 
 Set a default reasoning level for the agent alongside the model:
