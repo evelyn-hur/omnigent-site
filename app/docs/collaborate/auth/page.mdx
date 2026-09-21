@@ -136,7 +136,11 @@ control and, in built-in accounts mode only, `Change password`.
 Admins set a **server-wide sharing policy** that governs how users can share
 sessions with each other. It applies to every session on the server and changes
 only _new_ grants — revoke, listing existing grants, session ownership, and
-grants already in place keep working in every mode. Configure it two ways:
+grants already in place keep working in every mode. Note that no grant level
+lets a collaborator replace a session's agent bundle or edit its MCP servers;
+that stays with the agent's creator and admins (see
+[Editing the agent itself is owner-only](/docs/collaborate#agent-code-is-owner-only)).
+Configure it two ways:
 
 - **At boot**, with the `OMNIGENT_SHARING_MODE` environment variable.
 - **At runtime**, from **Settings > Sharing** in the web UI. This persists an

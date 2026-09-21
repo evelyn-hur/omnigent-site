@@ -86,6 +86,35 @@ an isolated remote container rather than on your personal machine. To constrain 
 agent can touch even on a trusted host, apply an
 [OS sandbox](/docs/reference/configuration/os-sandbox) policy.
 
+<h3 id="agent-code-is-owner-only">Editing the agent itself is owner-only</h3>
+
+An **Edit** share lets a teammate drive the agent, but not change _what the
+agent is_. On a multi-user server, replacing or editing a session's agent bundle
+— uploading a new bundle with `PUT /v1/sessions/{session_id}/agent`, or adding,
+replacing, or removing MCP servers through
+`/v1/sessions/{session_id}/agent/mcp-servers` — is allowed only for the user who
+created the agent or a server admin. Anyone else gets `403 Forbidden`, even
+with Edit access to the session.
+
+The bundle is code that later runs with the runner's authority, and a new MCP
+server injects an arbitrary spawn command, so a session-level Edit grant is
+deliberately not enough. Reading the agent (`GET`) is unaffected and follows
+normal session access.
+
+How ownership is assigned:
+
+- Creating a session from a bundle records you as the agent's owner.
+- [Forking](#fork) a session makes _you_, the forking user, the owner of the
+  fork's copy of the agent.
+- Built-in template agents have no owner and are read-only through these routes.
+- Agents created before ownership tracking existed, or bound by switching a
+  session's agent mid-conversation, have no recorded owner and can be modified
+  only by an admin. To regain a mutable agent, re-upload the bundle to a new
+  session, which creates a fresh agent stamped with your identity.
+
+When auth is disabled, or the server runs in local single-user mode, there is
+no ownership model and no restriction applies.
+
 ### Who said what
 
 When more than one authenticated person participates in a session, Omnigent
@@ -123,7 +152,10 @@ omni run --fork <session_id>
 ```
 
 Forking copies the full conversation history up to the fork point. From there, each session
-diverges independently.
+diverges independently. When the fork gets its own copy of the source agent, you — the forking
+user — are recorded as that copy's owner, so you can
+[edit its bundle and MCP servers](#agent-code-is-owner-only) even if you couldn't on the
+original.
 
 ### Fork onto a cloud sandbox
 
