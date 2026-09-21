@@ -46,8 +46,8 @@ CLI install or sign-in) so you can discover and configure them. If you'd rather
 see only the harnesses that can launch right now, turn on
 **Settings › Appearance › Hide unconfigured harnesses**. With it on, harnesses
 the selected host reports as unconfigured are hidden from the picker instead of
-badged — including the brain-harness override submenu of a bundle agent (though
-the currently selected brain always stays visible).
+badged — including the **Agent SDK** section of a bundle agent's Edit menu
+(though the currently selected SDK always stays visible).
 
 This is a per-device UI preference, off by default. It changes only what the
 picker shows on this browser — no account or host state is touched — and fails
@@ -121,9 +121,38 @@ tool.
 
 ### Worktree branches
 
-In the new-chat composer, name a branch to run the agent in its own git worktree.
-Naming a branch reveals a **base branch** field, the branch the worktree is cut
-from. Leave it blank to branch off the workspace's current branch.
+In the new-chat composer, the worktree chip beside the working directory lets a
+session run in its own git worktree. The chip appears only when the working
+directory is a **verified GitHub repository** — a git checkout whose remote
+points at `github.com`. It stays hidden for folders that aren't a git
+repository, for repositories hosted elsewhere (GitLab, Bitbucket, Codeberg,
+Azure DevOps, or a local-path remote), and for remotes Omnigent can't verify
+from their URL alone, such as GitHub Enterprise domains or SSH host aliases; in
+those cases the session simply starts in the working directory. Verification
+reads the repository's remote configuration on the host with no network or
+credential access, and only the coarse result (GitHub or not) leaves the host —
+never the remote URLs. A verified repository also gets a git-folder icon on the
+working-directory chip and in the **Recents** list.
+
+Open the chip to choose one of:
+
+- **No worktree** — start directly in the working directory.
+- **Worktrees** — the repository's existing linked worktrees, each listed by
+  folder name with the relative time of its last commit (**Unknown** on hosts
+  that don't report it). Hover a row for its full path, branch, and whether
+  that branch is checked out or detached. Pick one to start the session in that
+  worktree; edit the branch name afterwards and the session creates a new
+  worktree instead.
+- **New worktree** — type a branch name, or use the shuffle button to generate
+  a unique one, to create a fresh worktree. Naming a branch reveals a **base
+  branch** field, the branch the worktree is cut from. Leave it blank to branch
+  off the workspace's current branch.
+
+The **Open folder** picker offers the same choice: while you're browsing a
+verified GitHub repository, a **Worktrees** panel lists **Current folder** and
+the repository's linked worktrees, and **Confirm** uses whichever one is
+selected. In the **Recents** list, hover a folder and use its browse action to
+open the picker at that path without selecting it.
 
 To avoid retyping the same base, set a **Default base branch** under
 **Settings › Git**. The composer then auto-fills that value whenever you name a
@@ -131,13 +160,16 @@ new worktree branch; leave the setting blank to turn auto-fill off.
 
 To always start new sessions in a fresh worktree, turn on **Always use a random
 worktree** under **Settings › Git**. When it's on, the composer seeds a fresh
-randomly-named worktree branch for any new session that lands in a git
-workspace, so you don't have to name a branch each time. It's off by default.
+randomly-named worktree branch for any new session that lands in a verified
+GitHub repository, so you don't have to name a branch each time. It's off by
+default.
 
 A project's own **Random worktree** setting overrides this global default in
 either direction — a project can force worktrees on, or opt out even when the
 global default is on. Only projects that leave the setting unset inherit the
 global default.
+
+{/* TODO(doc-drafter): screenshot may be stale — the worktree popover is now a radio list (No worktree / Worktrees / New worktree) and only appears for verified GitHub repositories. */}
 
 ![Setting a default base branch for worktrees](/images/docs/git_worktree_setting.gif)
 
@@ -168,14 +200,32 @@ stored model is still a valid choice for that harness; a retired or unknown id
 falls back to your remembered pick. An explicit model you pick in the composer
 always wins for that session.
 
+### Choose a bundle agent's SDK
+
+Bundle agents such as Polly run their own supervisor loop on an underlying
+coding harness. When that harness can be overridden, the agent's **Edit** menu
+in the new-chat composer opens with an **Agent SDK** section, ahead of the
+Model and Effort sections, listing the SDKs the agent can run on (for example
+**Claude SDK** or **Codex**). Picking one applies immediately — there is no
+separate dialog or Save step — and is remembered for that agent; picking the
+agent's declared default clears the override. SDKs that aren't set up on the
+selected host carry the same needs-setup badge as the harness picker and follow
+[Hide unconfigured harnesses](#hide-unconfigured-harnesses). When
+[Smart Routing](/docs/build/routing) is configured, an **Auto** row lets the
+router choose the SDK.
+
+The agent picker pill shows the agent name with the selected SDK beside it, and
+its tooltip lists **Agent** and **SDK** rows, so the choice is visible without
+reopening the menu.
+
 ### Set what the agent can do without asking
 
 Native coding-agent sessions choose their permission or approval mode from the
 composer's **permissions dropdown** — the hand icon next to the input — not from
-the picker's **Edit** menu. The Edit menu keeps the model and effort choices;
-**Advanced settings** now appears only for agents that have a configurable
-underlying harness (a bundle agent whose brain harness you can override). The
-options in the dropdown depend on the selected harness:
+the picker's **Edit** menu. The Edit menu keeps the model and effort choices
+(and, for bundle agents with a configurable underlying harness, the
+[Agent SDK](#choose-a-bundle-agents-sdk) section). The options in the dropdown
+depend on the selected harness:
 
 - **Claude Code** (`claude-native`) offers its permission modes (for example
   **Accept edits** or **Bypass permissions**). The pick rides along as
@@ -205,6 +255,44 @@ On a multi-user server the sidebar splits your session list across two tabs:
   list.
 - **Shared with me** — a flat list of sessions other people have
   [shared with you](/docs/collaborate).
+
+### Composer status bar
+
+An existing session's composer carries a read-only status bar above the input.
+From left to right:
+
+- **Pull request** — `#123` for a single tracked PR or `N PRs` for several
+  (see [GitHub](#github)); click it to open the GitHub tab. It reads
+  **Checking PR…** while the association loads and **PR unavailable** when the
+  session's GitHub information can't be determined.
+- **Working directory** — the trailing folder name; hover for the full path.
+- **Branch** — the live checked-out branch, or **Detached HEAD**, **Not a Git
+  repository**, or **Branch unavailable** when there is none. It appears only
+  once the session's repository is confirmed on GitHub. Hovering shows the
+  branch the session was created on when that differs, and the worktree path
+  when the session runs in a linked worktree.
+- **Context ring** — how much of the model's context window is used. The ring
+  itself is the only indicator; hover or focus it for the exact figure, for
+  example `123 / 1,000 tokens (12% used)`.
+
+The model label on the session's harness picker condenses context-window
+suffixes, so a catalog name like `Opus 4.8 (1M context)` reads `Opus 4.8 1M`.
+
+### Failed turns and disconnected hosts
+
+When a turn fails, the transcript shows an error banner. If the failure is
+recoverable — the runner's terminal exited, or the host dropped its connection —
+the banner offers **Resume session**, which reconnects the existing session and
+reads **Reconnecting** while it does. A rate-limited request keeps a plain
+**Retry** instead. Expand the banner for the full message and diagnostics;
+later failures from the same turn are folded into it under **Related errors**
+rather than stacking as separate banners.
+
+In the sidebar, a session whose runner disconnected while its host is offline
+shows a hollow **Host disconnected** dot instead of the red error marker. The
+dot clears on its own once the host is back online, so a transient disconnect
+doesn't leave the session flagged as failed; a genuine fault keeps the error
+marker. Collapsed project folders roll the same state up.
 
 ### Browser-first mode
 
@@ -458,8 +546,11 @@ stays out of the list until you link it again, even if the agent keeps touching
 it. When a session tracks no PRs yet, the tab's empty state offers the same
 `Link a PR` action.
 
-The composer status line mirrors this: it shows `#123` for a single tracked PR
-or `N PRs` when several are tracked, and clicking it opens the GitHub tab.
+The [composer status bar](#composer-status-bar) mirrors this: it shows `#123`
+for a single tracked PR or `N PRs` when several are tracked, and clicking it
+opens the GitHub tab. While the association is still loading it reads
+**Checking PR…**, and **PR unavailable** when the session's GitHub information
+can't be determined.
 
 ## Mentioning workspace files
 

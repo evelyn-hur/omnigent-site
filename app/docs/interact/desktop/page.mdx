@@ -191,6 +191,18 @@ Omnigent desktop app?` rather than hanging.
 The app remembers your server URL for future launches. To change it later, go to
 **Server > Change Server**.
 
+### Run sessions on this machine
+
+With the `omni` CLI installed, the desktop app can register the computer it's
+running on as a host. In the new-chat composer's host menu, the local machine
+appears by its platform name (for example **This Mac**) with a hollow status dot
+and a **Use this machine** action when it isn't connected yet — either because
+it has never been registered and no other host is online, or because a
+previously registered local host has dropped offline. Choose it to connect;
+the row and the host chip read **Connecting…** until the host comes online.
+While another host is already online, the unregistered-machine row is not
+offered, so the menu never shows a competing local-machine action.
+
 ## Work with multiple servers
 
 Each window connects to one server. To work with multiple servers at the same time:
