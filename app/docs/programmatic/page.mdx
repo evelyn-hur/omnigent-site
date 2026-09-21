@@ -380,7 +380,9 @@ from omnigent_client import OmnigentClient
 
 async def main():
     async with OmnigentClient(base_url="http://127.0.0.1:6767") as client:
-        sessions = await client.sessions.list(limit=20, sort_by="updated_at")
+        sessions = await client.sessions.list(
+            limit=20, sort_by="updated_at", visibility="mine"
+        )
         for session in sessions:
             print(session.id, session.title, session.status)
         session_id = "conv_abc123"
@@ -390,6 +392,24 @@ async def main():
 
 asyncio.run(main())
 ```
+
+`visibility` controls which sessions `list` returns and is always sent to the
+server:
+
+<div style={{ overflowX: "auto" }}>
+
+| `visibility`      | Returns                                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------- |
+| `"all"` (default) | All active sessions you can access. Add `include_archived=True` to also include archived ones. |
+| `"mine"`          | Active sessions you own.                                                                       |
+| `"shared"`        | Active sessions you can access but do not own.                                                 |
+| `"archived"`      | Archived sessions you can access.                                                              |
+
+</div>
+
+`include_archived` only applies with `visibility="all"`; the other modes decide
+archive filtering themselves. On a server without authentication, `"mine"` and
+`"shared"` behave like `"all"`.
 
 For live events, iterate over `client.sessions.stream(session_id)`. Use
 `session.status` to check the session itself and
@@ -406,12 +426,20 @@ the snapshot and history again after reconnecting.
 List sessions on a local single-user server:
 
 ```bash
-curl --fail-with-body "http://127.0.0.1:6767/v1/sessions?limit=20&sort_by=updated_at"
+curl --fail-with-body "http://127.0.0.1:6767/v1/sessions?limit=20&sort_by=updated_at&visibility=all"
 ```
 
-Filter by `agent_name`, `agent_id`, or `search_query`. Listings exclude archived
-sessions and child sessions by default; use `include_archived=true` or
-`kind=any` when you need them. Both session and history listings are paginated:
+Always send `visibility` explicitly: `mine` lists active sessions you own,
+`shared` lists active sessions you can access but do not own, `archived` lists
+archived sessions you can access, and `all` lists every active session you can
+access. The server defaults to `all` for older clients that omit it. Without
+authentication, `mine` and `shared` behave like `all`.
+
+Filter by `agent_name`, `agent_id`, or `search_query`. Listings exclude child
+sessions by default; use `kind=any` when you need them. Archived sessions are
+returned with `visibility=archived`, or with `visibility=all&include_archived=true`
+(`include_archived` has no effect in the other modes). Both session and history
+listings are paginated:
 when `has_more` is true, use the returned `last_id` as the next request's `after`
 cursor.
 

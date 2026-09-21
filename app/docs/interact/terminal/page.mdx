@@ -81,7 +81,7 @@ continuous thread. Sessions are the core unit of work in Omnigent, and three pro
 them useful:
 
 - **Agent-independent.** A session belongs to you, not to a specific agent. Switch agents mid-conversation: start with a planner, switch to a coder, bring in a reviewer. The full history carries forward.
-- **Persistent.** Every session has a conversation ID and lives beyond the current terminal window. Close your laptop, come back tomorrow, resume where you left off: `omni resume <conversation_id>`
+- **Persistent.** Every session has a conversation ID and lives beyond the current terminal window. Close your laptop, come back tomorrow, resume where you left off: `omni resume <conversation_id>`. The resume picker lists only sessions you own — resuming binds a runner to the session, which the server allows only for its owner, so sessions merely shared with you are not offered.
 - **Shared.** Any omnigent can read the history of other sessions you have access to. When you spin up a new task, the agent already has context from previous work.
 
 ### Customize automatic session titles
