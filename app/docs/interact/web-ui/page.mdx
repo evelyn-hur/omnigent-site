@@ -486,6 +486,83 @@ Open `Settings` → `Appearance` to tune how code renders. Separate from the chr
 Both settings apply live to any open editor or terminal — no reload or reconnect
 — and persist in your browser across refreshes and restarts.
 
+## Copying from the embedded terminal
+
+Text copied out of an embedded terminal goes through a consent step before it
+reaches your clipboard. This covers three paths:
+
+- **Your own selection.** Select text in the terminal and use the browser's copy
+  gesture — right-click → **Copy**, **Edit → Copy**, or `⌘C` on macOS. `Ctrl+C`
+  is never remapped; it still sends an interrupt to the shell.
+- **tmux copy-mode.** A copy committed inside tmux after your recent keyboard or
+  mouse input.
+- **`pbcopy` inside a managed terminal.** Terminals that Omnigent launches carry
+  a private `pbcopy` command at the front of `PATH`. Text piped to it
+  (`some-command | pbcopy`) is handed to tmux and then to the browser, where it
+  is treated like any other program-initiated copy. The helper accepts plain
+  text on the general pasteboard (`-pboard general` and `-Prefer txt` are the
+  only options it understands), rejects empty input rather than clearing your
+  clipboard, caps a single copy at 1 MiB, and never falls back to writing the
+  host's clipboard directly. Native terminal attachments still receive tmux's
+  normal clipboard notification.
+
+The first time any of these fires, a prompt floats over the bottom-right of the
+page: **Allow copying from terminals?** It explains that allowing copying also
+lets terminal programs silently replace your clipboard with text or commands you
+didn't intend to paste. The prompt doesn't steal focus or resize the terminal,
+and only the newest pending copy is kept while it's open. Choose one of:
+
+- **Allow copying** / **Allow for this session** — copy this text and let later
+  copies through without asking.
+- **Copy once** — copy this text only; you'll be asked again next time. This
+  never saves a preference.
+- **Block** — discard the text and stop asking.
+
+A **Remember my choice** checkbox (on by default) decides how far **Allow** and
+**Block** reach. With it checked, the decision is saved in this browser or app
+for every session and terminal on the current Omnigent server; the button reads
+**Allow copying**. Unchecked, the button reads **Allow for this session** and
+the choice applies only while this terminal stays open — switching to another
+terminal starts from "ask" again. If the connection can't identify the server,
+the checkbox is disabled and only the per-terminal choice is available.
+
+### Change or revoke the preference
+
+Open **Settings → General → Terminal** and set **Copying from terminals** to
+**Ask before copying**, **Allow copying**, or **Block copying**. The setting
+takes effect immediately in every open terminal, including ones in other
+browser tabs:
+
+- Switching to **Block copying** or **Ask before copying** discards any copy
+  that's still waiting on a prompt.
+- Switching to **Allow copying** keeps a waiting copy and re-prompts with
+  **Finish copying terminal text** and a **Copy now** button, since the browser
+  needs a click to complete a write it didn't start.
+
+When copying is blocked, a copy attempt shows a short notice — **Copying from
+this terminal is blocked.** — pointing back to **Settings → General**. A blocked
+program-initiated copy from a managed terminal is dropped without touching your
+clipboard.
+
+### When the browser needs a click
+
+Browsers sometimes refuse a clipboard write that isn't tied to a user gesture.
+When that happens, the prompt reads **Copy needs a click** with **Copy now** and
+**Dismiss** buttons. Clicking **Copy now** finishes the copy; your saved
+preference is not changed by this prompt.
+
+In a read-only terminal, program-initiated copies (tmux copy-mode and `pbcopy`)
+are ignored; copying your own selection still works through the same prompt.
+
+<div className="note">
+
+**This is clipboard integration, not a sandbox.** The `pbcopy` helper only
+routes the normal terminal copy path through consent. It does not stop an
+unsandboxed program from deliberately calling a native clipboard API by its
+absolute path.
+
+</div>
+
 ## Inline comments and addressing
 
 Instead of typing in chat "change the third paragraph to be more concise," you click
