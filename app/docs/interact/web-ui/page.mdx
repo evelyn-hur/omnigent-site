@@ -125,6 +125,17 @@ In the new-chat composer, name a branch to run the agent in its own git worktree
 Naming a branch reveals a **base branch** field, the branch the worktree is cut
 from. Leave it blank to branch off the workspace's current branch.
 
+The branch chip also lists the repo's existing worktrees (the main checkout is
+listed separately and excluded from this list). Pick one to start the session
+directly in that worktree: the picker closes, the workspace switches to the
+worktree's directory, and the chip shows its branch. No worktree is created, but
+the branch still appears in the sidebar and deleting the session can offer to
+remove the worktree. The **New** field stays empty when you pick an existing
+worktree — it is reserved for creating a worktree. Typing a name there (or
+shuffling a random one) deselects the existing worktree and turns the request
+into a new worktree cut from the base branch; clear it, or re-pick the existing
+row, to go back to starting in the existing worktree.
+
 To avoid retyping the same base, set a **Default base branch** under
 **Settings › Git**. The composer then auto-fills that value whenever you name a
 new worktree branch; leave the setting blank to turn auto-fill off.
