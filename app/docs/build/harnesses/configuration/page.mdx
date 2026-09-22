@@ -457,5 +457,92 @@ removed in a future release. No other native command has a `--command` flag.
 
 </div>
 
+## Native harness diagnostics
+
+When a native Claude Code or Codex session misbehaves, the vendor CLI's own
+diagnostic output is usually the fastest way to see why — but by default
+Omnigent never copies that text into its logs. Set
+`OMNIGENT_HARNESS_STDERR_ENABLED=1` to opt in:
+
+```
+OMNIGENT_HARNESS_STDERR_ENABLED=1 omni host --server <your-server-url>
+```
+
+The flag defaults **off**. `1`, `true`, `yes`, and `on` (case-insensitive)
+enable capture; unset, `0`, or any other value disables it. Set it in the
+environment that launches the host or CLI — the host forwards it to its
+runners. Running processes keep their launch environment, so start a fresh host
+and a fresh session after changing it.
+
+| Harness | Diagnostic source | When exported |
+| --- | --- | --- |
+| `codex-native` | In-memory app-server stderr | Only when a fresh session fails to start its first thread (timeout or event stream ended), captured before process cleanup |
+| `claude-native` | An Omnigent-owned Claude `--debug-file` | Continuously while the transcript forwarder runs, plus a bounded final drain on shutdown or a failed terminal launch |
+
+Codex has no runtime-failure or continuous stderr export. Claude's debug channel
+does not capture arbitrary child-process stderr, terminal screen contents, or
+errors that occur before Claude initializes its logger. Your terminal's file
+descriptors are unchanged either way.
+
+### Where the output goes
+
+Captured text lands in the owning process's ordinary local logs (including
+runner logs under `~/.omnigent/logs/runner/`) and in structured event
+attributes, so it also reaches any debug-log or OpenTelemetry exporter you have
+configured. The flag does not enable an exporter, pick a destination, or change
+existing `DEBUG` stderr logging.
+
+- **Codex** — the existing thread-start failure is logged at `ERROR` with
+  `event_name=codex_thread_start_failed`, `harness=codex-native`, and
+  `phase=thread_discovery`. Process and stderr-reader state (`app_server_state`,
+  `app_server_pid`, `app_server_returncode`, `stderr_reader_state`, …) are
+  always included; with the flag enabled the event also carries a
+  `stderr_tail` of at most 64 KiB plus `stderr_tail_truncated`,
+  `stderr_lines_omitted`, and `stderr_bytes_omitted`. `stderr_capture_enabled`
+  records whether capture was on.
+- **Claude Code** — completed debug records are logged at `INFO` with
+  `event_name=harness_diagnostic_output`, `harness=claude-native`, and
+  `source_kind=claude_debug_log`. Each event carries at most 64 KiB of `text`
+  plus `offset`, `truncated`, `lines_omitted`, and `bytes_omitted`, and is
+  attributed to the currently active session ID (including after a session
+  switch). Shutdown, cancellation, and launch-failure drains read at most
+  256 KiB.
+
+To verify it's working, start a fresh `claude-native` session with the flag set,
+send a normal prompt, and filter your logs by the session ID and
+`event_name = 'harness_diagnostic_output'`. With the flag set to `0`, the
+session receives no injected `--debug-file` argument and emits none of these
+events.
+
+### Claude debug file
+
+With capture enabled, both `omni claude` and host-managed `claude-native`
+launches add `--debug-file` pointing at a fresh, owner-only file inside the
+session's bridge directory. If you pass your own `--debug-file`, it's preserved
+and Omnigent does **not** read it. Claude owns rotation of the file (in Claude
+2.1.277 it rotates near 10 MiB to `<filename>.1`, keeping one predecessor —
+roughly 20 MiB total, CLI-version dependent). The next enabled launch in the
+same bridge directory removes the previous owned file and its rotated
+predecessor; other debug files are never read or deleted. With the flag off, no
+file is created.
+
+<div className="note">
+
+**Caution:** Exported diagnostics can include tracebacks, request/response
+context, prompt-hook prompts, scripts, and response fragments. Omnigent strips
+terminal control codes and applies pattern-based credential redaction (labels
+such as `password`, `api key`, `token`, `client secret` followed by a value),
+but it is **not** a general secret detector — `password hunter2` is redacted,
+while `The password is hunter2` is not. It also does not filter prompts or
+payloads by content. Enable capture only where your log storage and its readers
+are appropriate for this text, and treat the output as sensitive even after
+redaction.
+
+</div>
+
+The shared redaction improvements that shipped with this flag also apply to
+ordinary logs with capture **disabled**: credential labels may now contain
+spaces (`api key: …`) and redacted values may carry a `Bearer` prefix.
+
 To add a runtime that Omnigent does not include, see
 [Community Harnesses](/docs/build/harnesses/community).
