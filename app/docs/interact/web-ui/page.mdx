@@ -38,11 +38,30 @@ a new top-level session; turn it off to keep the default session name and
 rename sessions yourself. This is a per-user preference stored on the server, so
 it follows your account across browsers and devices.
 
+### Unavailable harnesses in the picker
+
+The new-chat picker checks every harness against the selected host's readiness.
+A harness that host can't launch right now — its CLI isn't installed, it still
+needs a sign-in, or its version is too low — stays listed but is **disabled**:
+the row is dimmed, carries a warning triangle, and can't be selected with a
+click, `Enter`, or `Space`. Its **Edit** configuration submenu is unavailable
+too, so no model or effort choice can be made for it until it's repaired. Hover
+or focus the row for a tooltip that names the host and the command that fixes
+it, for example:
+
+- `Codex isn't configured on my-laptop — run omni setup on that machine.`
+- `Codex needs Codex authentication on my-laptop — run codex login on that
+  machine.`
+
+Healthy rows carry no tooltip. If the harness behind the agent you've already
+selected becomes unavailable — for example after switching to a host that lacks
+it — the picker's trigger replaces the model label with the same warning
+triangle, and hovering or focusing the trigger shows the repair message.
+
 ### Hide unconfigured harnesses
 
-By default the new-chat picker lists every harness and badges the ones that
-aren't set up on the selected host (for example, a harness that still needs a
-CLI install or sign-in) so you can discover and configure them. If you'd rather
+By default the new-chat picker lists every harness, including the disabled ones
+described above, so you can discover and configure them. If you'd rather
 see only the harnesses that can launch right now, turn on
 **Settings › Appearance › Hide unconfigured harnesses**. With it on, harnesses
 the selected host reports as unconfigured are hidden from the picker instead of
@@ -140,6 +159,27 @@ global default is on. Only projects that leave the setting unset inherit the
 global default.
 
 ![Setting a default base branch for worktrees](/images/docs/git_worktree_setting.gif)
+
+When you start the session, the composer records your working-directory and
+worktree choice (none, an existing worktree, or a new branch with its base) on
+the session as `omnigent.composer_context.v1.<n>` labels — one JSON document
+split across numbered chunks. The session's status bar reads this back, so a
+session still shows the directory you picked even before a workspace is bound.
+
+### Working directory and worktree status
+
+The status bar beneath the composer input shows where the session runs:
+
+- A **folder** item names the session's working directory. Hover it for the
+  full path (`Working directory: /path/to/repo`); a session with no directory
+  bound reads `No working directory bound`.
+- A **worktree** item appears only when the session runs inside a linked git
+  worktree. It shows the worktree's branch; hover it for the worktree path and
+  branch (`Worktree: /path/to/worktree. <branch>`). A session in a plain
+  checkout has no worktree item.
+
+When you pick a working directory in the composer's folder browser, the
+confirm button reads **Use this folder**.
 
 ### Choose the launch model
 
