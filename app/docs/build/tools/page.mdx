@@ -60,6 +60,26 @@ tools:
 
 Omit `tools` to expose everything the server provides.
 
+### Adding servers to a running session
+
+MCP servers can also be declared on a session's agent at runtime through the
+REST API (`POST` / `PUT /v1/sessions/{session_id}/agent/mcp-servers`; see the
+[REST API reference](/reference)). On a [shared server](/docs/deploy/overview)
+those declarations run on infrastructure other users also depend on, so each
+create or update is checked before it is saved:
+
+| Server                     | `stdio` (`command`)                   | `http` (`url`)                                                                                                                                                                              |
+| -------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local single-user server   | Allowed                               | Any endpoint, including loopback services such as `http://127.0.0.1:3000/mcp`                                                                                                                |
+| Shared (multi-user) server | Rejected — use an `http` transport    | Must be a public endpoint. Loopback, private (RFC 1918), shared/CGNAT, link-local (including the `169.254.169.254` cloud-metadata address), multicast, and reserved addresses are rejected. |
+
+A rejected declaration returns a `FORBIDDEN` error and nothing is persisted.
+On a shared server the `url` check resolves hostnames and rejects the server if
+any resolved address is internal; a host that does not resolve is rejected too
+(fail closed), as are IPv6 literals that embed an internal IPv4 address
+(IPv4-mapped, 6to4, NAT64). Because the registration check runs once, at save
+time, it does not by itself defeat DNS rebinding.
+
 ### Authentication
 
 As shown in the examples above, custom MCP servers accept credentials through:
