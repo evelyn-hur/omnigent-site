@@ -465,6 +465,15 @@ host for GitHub Enterprise). The details, changed files, and diff below are
 always the selected PR's, fetched from GitHub — including fork PRs and renamed
 files — so they match the PR's "Files changed" exactly.
 
+When a file diff is computed from the local checkout instead, Omnigent diffs
+`HEAD` against the merge base with the base branch. In a shallow or
+single-branch clone (for example one created under an admin's
+[`sandbox.git_clone`](/docs/reference/configuration/cloud-sandbox#git-clone-options)
+policy) a missing merge base or unfetched base branch produces an error naming
+the `git fetch` command to run, rather than a misleading branch-tip comparison.
+File content that cannot be read is also reported as an error, never shown as
+an added or deleted file.
+
 ### Link or unlink a PR
 
 Use the **+** (`Link a PR`) button to attach a pull request by URL — paste a
@@ -657,6 +666,46 @@ choose **Ask in side chat**: the selection is added as a quote card, and when
 you send, it's forwarded as a `/side` command carrying the quoted text and your
 question. On a harness without side-chat support this action degrades to an
 ordinary quoted reply in the main chat.
+
+## Side chats with `/side`
+
+Side chats work on every harness. A side chat forks the conversation into a new
+session titled **Side chat** and opens it as a tab in the right **Workspace**
+rail, so you can ask a tangent question with the full context of the parent
+conversation without adding anything to the parent's transcript. The parent
+stays on its own page and its history is untouched; the side chat's messages
+are saved only on the forked session.
+
+There are three ways to start one:
+
+- Type `/side <your question>` in the composer and send it. The slash menu
+  offers `/side` on every session.
+- Pick **Start a new side chat** from the composer's `+` tray.
+- In the rail, click **Open new** (`+`) and choose **Side chat**, then type your
+  question in the side-chat pane.
+
+The side chat runs in the parent's **current working directory** — it shares
+the parent's workspace rather than cutting its own git worktree, and a branch
+saved on the parent (for example, from a worktree created on another machine)
+is neither required nor reused. Where it runs depends on how the parent is
+placed:
+
+- **Hosted sessions** (bound to a host and workspace) launch a separate runner
+  for the fork on the parent's host, in the parent's workspace.
+- **CLI sessions** with an online runner but no host reuse the parent's
+  existing runner.
+- **In-process sessions** with neither a host nor a runner use normal server
+  dispatch.
+
+If the parent is on a dormant resumable managed host, starting a side chat
+wakes the host first and then launches on the refreshed placement. If neither
+the parent's host nor its runner is reachable, the side chat isn't created and
+the composer shows **This session is disconnected. Reconnect it before starting
+a side chat.**
+
+Closing a side-chat tab stops the forked session only; the parent keeps
+working and you can continue chatting in it. Codex native sessions handle `/side`
+natively (an in-process fork) instead of using this generic flow.
 
 ## Scheduled tasks
 
