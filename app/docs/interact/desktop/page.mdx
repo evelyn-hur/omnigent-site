@@ -223,21 +223,21 @@ automatically, so there is nothing to run on each machine.
    `omnigent-servers.mobileconfig`.
 2. **Add it to your MDM** as a custom configuration profile. Jamf, Kandji,
    Intune, and Mosyle each expose this as "Custom Settings", "Custom
-   Configuration Profile", or "Managed Preferences" — upload the file or paste
+   Configuration Profile", or "Managed Preferences". Upload the file or paste
    its contents.
 3. **Scope it** to the Macs or people who should see the servers.
 4. **Push the profile.** Enrolled Macs receive it automatically.
-5. **Verify.** Open Omnigent Desktop — your servers appear under **Provided by
+5. **Verify.** Open Omnigent Desktop. Your servers appear under **Provided by
    your organization** on the connect screen and in the server switcher.
 
 Applying or removing the profile takes effect the next time the connect screen
-loads or the server switcher opens — no reinstall or restart.
+loads or the server switcher opens, with no reinstall or restart.
 
 ### The profile
 
 Save this as `omnigent-servers.mobileconfig`. **Change only** the server URL(s)
 and the two `PayloadIdentifier` values (use your organization's own reverse-DNS
-name). Keep everything else exactly as shown — including the
+name). Keep everything else exactly as shown, including the
 `ai.omnigent.desktop` line, which is the desktop app's identifier and is how
 macOS delivers the setting to Omnigent.
 
@@ -332,12 +332,12 @@ domain.
 </table>
 
 - Each URL must use `https://`. A schemeless host is read as `https://`, and
-  `http://` is rejected — so a plain `localhost` server can't be preset.
+  `http://` is rejected, so a plain `localhost` server can't be preset.
 - Paths are preserved, so you can point directly at a workspace mount such as
   `https://my-workspace.cloud.databricks.com/ml/omnigents`.
 - Entries that share an origin are collapsed, keeping the first. If any entry is
-  an invalid type, insecure, or malformed — or the list has more than 10
-  entries — the whole list is rejected.
+  an invalid type, insecure, or malformed, or if the list has more than 10
+  entries, the whole list is rejected.
 
 Preset servers are read only on macOS; other platforms ignore the preference.
 
