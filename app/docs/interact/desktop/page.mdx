@@ -286,72 +286,37 @@ Notes:
 
 These preferences are read only on macOS; other platforms ignore them.
 
-### Example (macOS Configuration Profile)
+### Example (macOS managed preferences)
 
-This shows the keys in the macOS Configuration Profile format. Other MDMs expose
-the same settings through their own custom-settings UI, so match the keys rather
-than the exact file. Keep the `ai.omnigent.desktop` domain and the key names as
-shown, and change the server URLs and names to your own.
+This is the macOS managed-preferences payload Omnigent reads. Depending on your
+MDM, you either upload it inside a Configuration Profile or paste these keys into
+a custom-settings form; either way, your MDM generates the surrounding profile
+wrapper (the `PayloadUUID`, `PayloadIdentifier`, and similar boilerplate). Keep
+the `ai.omnigent.desktop` domain and the key names as shown, and change the
+server URLs and names to your own.
 
 ```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
+<key>ai.omnigent.desktop</key>
 <dict>
-  <key>PayloadContent</key>
+  <key>Forced</key>
   <array>
     <dict>
-      <key>PayloadContent</key>
+      <key>mcx_preference_settings</key>
       <dict>
-        <key>ai.omnigent.desktop</key>
+        <key>serverUrls</key>
+        <array>
+          <string>https://omnigent.corp.example.com</string>
+          <string>https://my-workspace.cloud.databricks.com/ml/omnigents</string>
+        </array>
+        <key>serverNames</key>
         <dict>
-          <key>Forced</key>
-          <array>
-            <dict>
-              <key>mcx_preference_settings</key>
-              <dict>
-                <key>serverUrls</key>
-                <array>
-                  <string>https://omnigent.corp.example.com</string>
-                  <string>https://my-workspace.cloud.databricks.com/ml/omnigents</string>
-                </array>
-                <key>serverNames</key>
-                <dict>
-                  <key>https://omnigent.corp.example.com</key>
-                  <string>Engineering</string>
-                </dict>
-              </dict>
-            </dict>
-          </array>
+          <key>https://omnigent.corp.example.com</key>
+          <string>Engineering</string>
         </dict>
       </dict>
-      <key>PayloadDisplayName</key>
-      <string>Omnigent Desktop Managed Preferences</string>
-      <key>PayloadIdentifier</key>
-      <string>com.example.omnigent.preferences</string>
-      <key>PayloadType</key>
-      <string>com.apple.ManagedClient.preferences</string>
-      <key>PayloadUUID</key>
-      <string>0DD2D4B1-ED0B-4C59-8020-E003E6F16B74</string>
-      <key>PayloadVersion</key>
-      <integer>1</integer>
     </dict>
   </array>
-  <key>PayloadDisplayName</key>
-  <string>Omnigent Desktop</string>
-  <key>PayloadIdentifier</key>
-  <string>com.example.omnigent</string>
-  <key>PayloadScope</key>
-  <string>User</string>
-  <key>PayloadType</key>
-  <string>Configuration</string>
-  <key>PayloadUUID</key>
-  <string>9C6AEBD1-0DE3-4411-B490-33C3FAAF3B2E</string>
-  <key>PayloadVersion</key>
-  <integer>1</integer>
 </dict>
-</plist>
 ```
 
 ### What users see
