@@ -212,34 +212,86 @@ Notifications and badge counts are combined across all connected servers.
 ## Preset server URLs via MDM (macOS)
 
 On macOS, an administrator can preset the servers Omnigent Desktop offers, so
-people pick their organization's server from a list instead of typing it. You
-deliver a small configuration profile through your MDM: the Mac applies it
-automatically, so there is nothing to run on each machine.
+users pick their organization's server from a list instead of typing it. This
+uses the standard macOS managed-preferences mechanism, delivered through
+whatever MDM you run (for example Jamf, Kandji, Intune, or Mosyle). Each MDM has
+its own UI and configuration format, so follow your MDM's managed-preferences or
+custom-settings documentation for the exact steps. This page documents what
+Omnigent reads: the preference domain and the options it recognizes.
 
-### Set it up
+### Preference domain
 
-1. **Copy the [profile](#the-profile) below** and replace the example server
-   URLs with your own, most-preferred first (`https://` only). Save it as
-   `omnigent-servers.mobileconfig`.
-2. **Add it to your MDM** as a custom configuration profile. Jamf, Kandji,
-   Intune, and Mosyle each expose this as "Custom Settings", "Custom
-   Configuration Profile", or "Managed Preferences". Upload the file or paste
-   its contents.
-3. **Scope it** to the Macs or people who should see the servers.
-4. **Push the profile.** Enrolled Macs receive it automatically.
-5. **Verify.** Open Omnigent Desktop. Your servers appear under **Provided by
-   your organization** on the connect screen and in the server switcher.
+Omnigent Desktop reads its managed preferences from the app's bundle identifier:
 
-Applying or removing the profile takes effect the next time the connect screen
-loads or the server switcher opens, with no reinstall or restart.
+```text
+ai.omnigent.desktop
+```
 
-### The profile
+### Options
 
-Save this as `omnigent-servers.mobileconfig`. **Change only** the server URL(s)
-and the two `PayloadIdentifier` values (use your organization's own reverse-DNS
-name). Keep everything else exactly as shown, including the
-`ai.omnigent.desktop` line, which is the desktop app's identifier and is how
-macOS delivers the setting to Omnigent.
+<table>
+  <thead>
+    <tr>
+      <th>Key</th>
+      <th>Type</th>
+      <th>Required</th>
+      <th>Default</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <code>serverUrls</code>
+      </td>
+      <td>Array of strings</td>
+      <td>No</td>
+      <td>
+        <code>[]</code>
+      </td>
+      <td>
+        Server URLs to offer, most-preferred first. Each must use{" "}
+        <code>https://</code>. At most 10.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>serverNames</code>
+      </td>
+      <td>Dictionary</td>
+      <td>No</td>
+      <td>
+        <code>{"{}"}</code>
+      </td>
+      <td>
+        Display names for the servers in <code>serverUrls</code>, keyed by URL
+        (for example <code>Engineering</code>). A server with no name shows its
+        host.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+Notes:
+
+- A schemeless host is read as `https://`, and `http://` is rejected, so a plain
+  `localhost` server can't be preset.
+- Paths are preserved, so you can point directly at a workspace mount such as
+  `https://my-workspace.cloud.databricks.com/ml/omnigents`.
+- Entries that share an origin are collapsed, keeping the first. If any entry is
+  an invalid type, insecure, or malformed, or if the list has more than 10
+  entries, the whole list is rejected.
+- A `serverNames` entry is matched to its `serverUrls` entry after the same
+  normalization, so write the URL the same way in both. Names are cosmetic.
+
+These preferences are read only on macOS; other platforms ignore them.
+
+### Example (macOS Configuration Profile)
+
+This shows the keys in the macOS Configuration Profile format. Other MDMs expose
+the same settings through their own custom-settings UI, so match the keys rather
+than the exact file. Keep the `ai.omnigent.desktop` domain and the key names as
+shown, and change the server URLs and names to your own.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -264,6 +316,11 @@ macOS delivers the setting to Omnigent.
                   <string>https://omnigent.corp.example.com</string>
                   <string>https://my-workspace.cloud.databricks.com/ml/omnigents</string>
                 </array>
+                <key>serverNames</key>
+                <dict>
+                  <key>https://omnigent.corp.example.com</key>
+                  <string>Engineering</string>
+                </dict>
               </dict>
             </dict>
           </array>
@@ -296,50 +353,6 @@ macOS delivers the setting to Omnigent.
 </dict>
 </plist>
 ```
-
-If your MDM asks only for the inner payload, paste just the `serverUrls` key
-and its array into the custom-settings form for the `ai.omnigent.desktop`
-domain.
-
-### Keys and rules
-
-<table>
-  <thead>
-    <tr>
-      <th>Key</th>
-      <th>Type</th>
-      <th>Required</th>
-      <th>Default</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>
-        <code>serverUrls</code>
-      </td>
-      <td>Array of strings</td>
-      <td>No</td>
-      <td>
-        <code>[]</code>
-      </td>
-      <td>
-        Server URLs to offer, most-preferred first. Each must use{" "}
-        <code>https://</code>. At most 10.
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-- Each URL must use `https://`. A schemeless host is read as `https://`, and
-  `http://` is rejected, so a plain `localhost` server can't be preset.
-- Paths are preserved, so you can point directly at a workspace mount such as
-  `https://my-workspace.cloud.databricks.com/ml/omnigents`.
-- Entries that share an origin are collapsed, keeping the first. If any entry is
-  an invalid type, insecure, or malformed, or if the list has more than 10
-  entries, the whole list is rejected.
-
-Preset servers are read only on macOS; other platforms ignore the preference.
 
 ### What users see
 
